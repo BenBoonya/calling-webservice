@@ -11,6 +11,7 @@ import boonya.ben.callingwebservice.species.SpeciesRepository
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.ArgumentMatchers
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
@@ -23,8 +24,6 @@ class SpeciesListViewModelTest {
     @Rule @JvmField
     val instantExecutorRule = InstantTaskExecutorRule()
 
-    @Mock lateinit var speciesRepo: SpeciesRepository
-
     lateinit var speciesListViewModel: SpeciesListViewModel
 
     val mockedSpecies = listOf(
@@ -36,30 +35,26 @@ class SpeciesListViewModelTest {
     fun setup() {
         MockitoAnnotations.initMocks(this)
         speciesListViewModel = SpeciesListViewModel().apply {
-            repository = this@SpeciesListViewModelTest.speciesRepo
+            repository = object : SpeciesRepository {
+                override fun getSpecies(successHandler: (List<Species>?) -> Unit, failureHandler: (Throwable?) -> Unit) {
+                    successHandler(mockedSpecies)
+                }
+            }
         }
     }
-
-    fun mockSuccessHandler(speciesList: SpeciesList?) {}
-
-    fun mockFailureHandler(throwable: Throwable?) {}
 
     @Test
     fun getSpecies() {
         val speciesResponse = MutableLiveData<List<Species>>()
-        `when`(speciesRepo.getSpecies(this::mockSuccessHandler, this::mockFailureHandler)).then({
-            speciesResponse.apply {
-                value = mockedSpecies
-            }
-        })
         val observer = mock(Observer::class.java)
+        speciesListViewModel.speciesResponse = speciesResponse
 
         speciesResponse.observeForever(observer as Observer<List<Species>>)
 
         speciesListViewModel.getSpecies()
 
-        verify(speciesRepo).getSpecies(this::mockSuccessHandler, this::mockFailureHandler)
-        verifyNoMoreInteractions(speciesRepo)
+//        verify(speciesRepo).getSpecies(ArgumentMatchers.any(), ArgumentMatchers.any())
+        //verifyNoMoreInteractions(speciesRepo)
         verify(observer).onChanged(mockedSpecies)
         verifyNoMoreInteractions(observer)
     }

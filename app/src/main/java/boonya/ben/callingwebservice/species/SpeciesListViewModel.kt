@@ -13,17 +13,17 @@ class SpeciesListViewModel : ViewModel() {
     @Inject
     lateinit var repository: SpeciesRepository
 
-    val isLoading = MutableLiveData<Boolean>()
+    var isLoading = MutableLiveData<Boolean>()
 
-    val apiError = MutableLiveData<Throwable>()
+    var apiError = MutableLiveData<Throwable>()
 
-    val speciesResponse = MutableLiveData<List<Species>>()
+    var speciesResponse = MutableLiveData<List<Species>>()
 
     fun getSpecies() {
         isLoading.value = true
         repository.getSpecies(
                 {
-                    speciesResponse.value = it?.speciesList
+                    speciesResponse.value = it
                     isLoading.value = false
                 },
 
